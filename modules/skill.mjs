@@ -1,8 +1,26 @@
 
+/**
+ * @class
+ * @property {string} name
+ * @property {number} level
+ */
+export const SkillModel = (name, level) => {
+  return {
+    name: name,
+    level: level
+  };
+}
 
-export function updateSkillElement(node, skill, id=null) {
+/**
+ * Update the skill element.
+ * @param {Node} node The DOM node. 
+ * @param {Skill} skill The upated skill value. 
+ * @param {string} [id] The identifier of the created element.
+ * Defaults to no element. 
+ */
+export function updateSkillElement(node, skill, id = null) {
   if (skill) {
-    const skillId = (id==null?node.getAttribute("id"):id);
+    const skillId = (id == null ? node.getAttribute("id") : id);
     var elem = document.getElementById(createId(id, "name"));
     if (elem) {
       elem.textContent = skill.name;
@@ -14,6 +32,11 @@ export function updateSkillElement(node, skill, id=null) {
   }
 }
 
+/**
+ * Create skill element.
+ * @param {Node} node The node into which the skill element is added.
+ * @param {Skill} skill The skill containing the initial values. 
+ */
 export function createSkillElement(node, skill) {
   const name = document.createElement("span");
   const id = node.getAttribute("id");

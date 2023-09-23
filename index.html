@@ -1,44 +1,12 @@
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dune Rest Service</title>
-  <script src="./modules/person.js">console.log("Could not read script");</script>
+  <script type="module" src="./modules/person.js">console.log("Could not read script");</script>
   <script type="module" src="./modules/data.js">
-    var data = {
-      skills = [],
-      motivations = [],
-      people = []
-    };
-    
-    function createSkill(name, level=null) {
-      return new Skill({name, 
-      level: (level == null ? 4 : level)});
-    }
-    
-    function hasSkill(name) {
-      return data.skills.find(
-        (v) => (v===name)) !== undefined;
-    }
-    
-    function addSkill(name) {
-      if (!hasSkill(name)) {
-        data.skills.push(name);
-      }
-    }
-    
-    function addPerson(person) {
-      if (person instanceof Person) {
-        data.people.append(person);
-      } else if (person) {
-        const name = "" + person;
-        data.people.append(new Person(name));
-      }
-    }
-    console.log("Data module ok.");
-    
+    console.log("Could not load data module");    
   </script>
   <script>
     function h1(text, level=1) {
@@ -124,7 +92,7 @@
   <main id="main">
     <section id="skills">
     </section>
-    <form method="POST" onsubmit="alert("Add new");">
+    <form method="POST" onsubmit="alert('Add new');">
       <div><label for="name">Name</label><input name="name" type="text"/></div>
       <div>
         <caption>Type</caption>

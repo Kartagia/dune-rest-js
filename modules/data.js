@@ -1,16 +1,17 @@
-import {createStore} from "redux";
-import {createSelector} from "Reselect";
+import { createStore } from "redux";
+import { createSelector } from "Reselect";
+import { Skill } from "./skill.mjs";
 
 function unescapeString(val) {
   if (typeof val === "string") {
     const map = new Map(
-      [['f', "\f"], ['n',"\n"], ['t', "\t"], ['r', "\r"]]);
+      [['f', "\f"], ['n', "\n"], ['t', "\t"], ['r', "\r"]]);
     const re = RegExp("\\(.)", "g");
     let match;
     while ((match = re.exec(val))) {
       const replacement = map.get(match[1]) || match[1];
       val.splice(match.index, match[0].length, replacement);
-      re.lastIndex = match.index +  replacement.length;
+      re.lastIndex = match.index + replacement.length;
     }
   } else {
     return undefined;
@@ -78,46 +79,46 @@ function getParser(def) {
           if (re.test(val)) {
             const delim = ["0x", "\\x"].find((v) => (val.startsWith(v)));
             if (delim) {
-              return Number.parseInt(val.substring(delim.length).toLowerCase(),16);
+              return Number.parseInt(val.substring(delim.length).toLowerCase(), 16);
             } else {
               return Number.parseInt(val.toLowerCase(), 16);
             }
-        } else {
+          } else {
             throw RangeError("Not a hex int");
-        };
-          
+          };
+
         }
       case "X":
       case "Hex":
         (val) => {
-        if (re.test(val)) {
-          const delim = ["0X", "\\X"].find((v) => (val.startsWith(v)));
-          if (delim) {
-            return Number.parseInt(val.substring(delim.length).toLowerCase(), 16);
+          if (re.test(val)) {
+            const delim = ["0X", "\\X"].find((v) => (val.startsWith(v)));
+            if (delim) {
+              return Number.parseInt(val.substring(delim.length).toLowerCase(), 16);
+            } else {
+              return Number.parseInt(val.toLowerCase(), 16);
+            }
           } else {
-            return Number.parseInt(val.toLowerCase(), 16);
-          }
-        } else {
-          throw RangeError("Not a hex int");
-        };
+            throw RangeError("Not a hex int");
+          };
         }
       case "d":
       case "dec":
       case "number":
         return (value) => (
-          re.test(value) ? (value.indecOf(".") == -1 ? Number.parseInt(value) : Number.parseFloat(value) ) : undefined);
+          re.test(value) ? (value.indecOf(".") == -1 ? Number.parseInt(value) : Number.parseFloat(value)) : undefined);
       case "int":
       case "i":
       case "integer":
         return (value) => (
           re.test(value) ? Number.parseInt(value) : undefined);
       case "string":
-        return (value) => (re.test(value) ? ( value.startsWith("\"")
-        ? unescapeString(value.substring(1,value.length-1)) : value): undefined);
+        return (value) => (re.test(value) ? (value.startsWith("\"")
+          ? unescapeString(value.substring(1, value.length - 1)) : value) : undefined);
       default:
         return (value) => (re.test(value)
-        ? decodeURIComponent(value)
-        : undefined);
+          ? decodeURIComponent(value)
+          : undefined);
     }
   } else {
     return getRegExp("");
@@ -127,17 +128,17 @@ function getParser(def) {
 function parseActionDef(action) {
   const result = [];
   if (action) {
-  const paramRegex = /\{(?<key>\w+)(?::(?<type>[^{}]*))?\}/ug;
-  let match = undefined;
-  let last = 0;
-  while ((match = paramRegex.exec(action)) ) {
-    result.push(action.substring(last, match.index));
-    last = paramRegex.lastIndex;
-    result.push({name: match.groups["key"], type: (match.groups["type"] || "")});
-  }
-  if (last < action.length) {
-    result.push(action.substring(last));
-  }
+    const paramRegex = /\{(?<key>\w+)(?::(?<type>[^{}]*))?\}/ug;
+    let match = undefined;
+    let last = 0;
+    while ((match = paramRegex.exec(action))) {
+      result.push(action.substring(last, match.index));
+      last = paramRegex.lastIndex;
+      result.push({ name: match.groups["key"], type: (match.groups["type"] || "") });
+    }
+    if (last < action.length) {
+      result.push(action.substring(last));
+    }
   }
   return result;
 }
@@ -147,7 +148,7 @@ function parseActionDef(action) {
  * @param {Array|string} actionDef The action definition.
  * @param {boolean} [open=false] Is the action open ended.
  */
-function matchAction(action, actionDef, open=false) {
+function matchAction(action, actionDef, open = false) {
   if (actionDef instanceof Array) {
     if (action == null) {
       return false;
@@ -155,7 +156,7 @@ function matchAction(action, actionDef, open=false) {
       const result = [];
       const actStr = "" + action;
       let index = 0;
-      actionDef.forEach( (def) => {
+      actionDef.forEach((def) => {
         if (typeof def === "object") {
           // Parameter type
           const re = getRegExp(def);
@@ -176,17 +177,17 @@ function matchAction(action, actionDef, open=false) {
         }
       })
       if (index < actStr.length) {
-        
+
         if (open) {
           result.push(actStr.substring(index));
         } else {
           return false;
         }
-      } 
+      }
       return result;
     }
   } else {
-    return matchAction(action, parseActionDef(""+actionDef), open);
+    return matchAction(action, parseActionDef("" + actionDef), open);
   }
 }
 
@@ -199,11 +200,11 @@ function actionArrayReducer(state, command, actions = [], keyToAction = (key) =>
         return matchAction(command.type, keyToAction(entry.name));
       }
     }
-    );
+  );
   if (action != undefined) {
-    const executor = 
-    (action instanceof Array ?
-      action[1] : action.action);
+    const executor =
+      (action instanceof Array ?
+        action[1] : action.action);
     if (action) {
       return action(state, command);
     } else {
@@ -214,9 +215,9 @@ function actionArrayReducer(state, command, actions = [], keyToAction = (key) =>
   }
 
 }
-function actionMapReducer( state, command, actionMap, keyToAction = (key) => (key)) {
+function actionMapReducer(state, command, actionMap, keyToAction = (key) => (key)) {
   if (actionMap instanceof Map) {
-    const action = actionMap.entries().find( (value, key) => (keyToAction(key) === command.type));
+    const action = actionMap.entries().find((value, key) => (keyToAction(key) === command.type));
     if (action) {
       return action(state, command);
     } else {
@@ -227,7 +228,7 @@ function actionMapReducer( state, command, actionMap, keyToAction = (key) => (ke
   }
 }
 
-function reducer( state, action, module, actions = {} ) {
+function reducer(state, action, module, actions = {}) {
   if (actions) {
     const moduleAction = (key) => (`${module}/${key}`);
     if (actions instanceof Map) {
@@ -256,7 +257,7 @@ function reducer( state, action, module, actions = {} ) {
  */
 const addItem = (target, added) => {
   if (target instanceof Array) {
-    return [ ...target, added];
+    return [...target, added];
   } else {
     return target;
   }
@@ -268,16 +269,16 @@ const addItem = (target, added) => {
  */
 const deleteItem = (target, item) => {
   if (target instanceof Array) {
-    const index = target.findIndex( (v) => (v === item) );
-    return (index < 0 ? target: [
-    ...(target.slice(0,index)), ...(target.slice(index+1))]);
+    const index = target.findIndex((v) => (v === item));
+    return (index < 0 ? target : [
+      ...(target.slice(0, index)), ...(target.slice(index + 1))]);
   } else {
     return target;
   }
 };
 
 const selectName = (state, name) => (name);
-const selectByName = (state, name) => (state.find( (v) => (v.name === name)));
+const selectByName = (state, name) => (state.find((v) => (v.name === name)));
 
 const selectId = (state, id) => (id);
 
@@ -289,9 +290,9 @@ const selectId = (state, id) => (id);
  * @param {string|symbol} field The sought field. 
  * @returns {*} The value of the field, if the field exists. An undefined value otherwise.
  */
-const selectFieldValue = (state, field) => ( (state == null ? null : state[field]));
+const selectFieldValue = (state, field) => ((state == null ? null : state[field]));
 const selectIdValue = (state) => (selectFieldValue(state, field));
-const selectById = (state, id) => (state.find( (v) => (v.id === id)));
+const selectById = (state, id) => (state.find((v) => (v.id === id)));
 
 
 const selectSkills = (state) => (state.skills);
@@ -302,7 +303,7 @@ const selectSkillByName = createSelector([selectSkills, selectName], selectByNam
 
 const selectMotivationByName =
   createSelector([selectMotivations, selectName], selectByName);
-  
+
 const selectPersonById =
   createSelector([selectPeople, selectId], selectById);
 
@@ -312,37 +313,37 @@ function skillActions() {
       if (state.skills instanceof Array) {
         return state;
       } else {
-        return { ...state, skills: []};
+        return { ...state, skills: [] };
       }
     } else {
-      return { skills = [] };
+      return { skills: [] };
     }
   };
   const result = new Map();
   result.set("set",
-  createSelector([selectSkills, (_, skill) => (skill)],
-  (skills, skill) => {
-    if (skill == null) return skills;
-    
-    const index = skills.findIndex(
-      (v) => (selectName(v) === selectName(skill)));
-    if (index < 0) {
-      return [
-        ...(skills.slice(0,index)),
-        skill,
-        ...(skilld.slice(index+1))
-        ];
-    } else {
-      return skills;
-    }
-  }));
-  result.set("add", 
-  createSelector([selectSkills, (_, skill) => (skill.added)], addItem
-  ));
+    createSelector([selectSkills, (_, skill) => (skill)],
+      (skills, skill) => {
+        if (skill == null) return skills;
+
+        const index = skills.findIndex(
+          (v) => (selectName(v) === selectName(skill)));
+        if (index < 0) {
+          return [
+            ...(skills.slice(0, index)),
+            skill,
+            ...(skilld.slice(index + 1))
+          ];
+        } else {
+          return skills;
+        }
+      }));
+  result.set("add",
+    createSelector([selectSkills, (_, skill) => (skill.added)], addItem
+    ));
   return result;
 }
 
-function skillReducer( state = {
+function skillReducer(state = {
   skills: []
 }, action) {
   return reducer(state, action, skillActions());
@@ -350,10 +351,19 @@ function skillReducer( state = {
 
 const data = createStore(skillReducer);
 
+/**
+ * Get skills of the data.
+ * @returns {Array<SkillModel>} The skill model data.
+ */
 export function getSkills() {
-  return selectFieldValue(data.getState(),"skills");
+  return selectFieldValue(data.getState(), "skills");
 }
 
+/**
+ * Add a skill to the data.
+ * @param {Skill} skill The added skill. 
+ * @returns {boolean} True, if and only if the skill was added.
+ */
 export function addSkill(skill) {
   if (skill instanceof Skill) {
     if (hasSkill(skill.name)) {
@@ -367,7 +377,7 @@ export function addSkill(skill) {
     if (hasSkill(name)) {
       throw new Error("Skill already exists");
     } else {
-      data.skills.push(new Skill({name: name}));
+      data.skills.push(new Skill({ name: name }));
     }
   } else {
     return false;
