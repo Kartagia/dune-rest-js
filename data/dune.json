@@ -1,0 +1,20 @@
+{
+  "skills": {
+    "min": 4,
+    "max": 8,
+    "list": ["Battle", "Communication", "Discipline", "Move", "Understant"]
+  },
+  "morivations": {
+    "min": 4,
+    "max": 8,
+    "list": ["Duty", "Power", "Justice", "Truth", "Faith"]
+  },
+  "people": [
+    {"name": "Sirius",
+      "morivations": {
+        "Duty": {"value": 8, "statement": "I do opposite I was told to"},
+        "Power":{"value": 5}
+      }
+    }
+  ]
+}
