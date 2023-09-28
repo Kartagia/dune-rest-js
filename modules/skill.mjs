@@ -1,6 +1,9 @@
 
+import {getSection} from "./sections.mjs";
+
 /**
- * @class
+ * Create a new skill model.
+ * @constructor
  * @property {string} name
  * @property {number} level
  */

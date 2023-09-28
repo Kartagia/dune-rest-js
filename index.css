@@ -1,0 +1,55 @@
+nav > ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  background-color: darkgrey;
+  color: darkblue;
+  margin: 1px;
+}
+nav li {
+  padding: 1px;
+}
+nav ul:nth-child(2n+1) {
+  background-color: darkslategrey;
+}
+nav ul:nth-child(2n) {
+  background-color: darkviolet;
+}
+
+nav ul:nth-child(2n+1) > li {
+  padding: 1px;
+  background-color: grey;
+}
+
+nav ul:nth-child(2n) > li {
+  padding: 2px;
+  background-color: yellow;
+}
+
+nav > ul > li {
+  display: inline;
+  float: left;
+  padding: 0px 10px;
+}
+
+nav > ul > li ul > li {
+  display: block;
+  width: 60px;
+}
+
+nav {
+  min-height: "10%";
+  background-color: silver;
+  color: navy;
+  padding: 1px;
+}
+
+html {
+  background-color: black;
+  padding: 2%;
+}
+
+header, section, footer, main {
+  background-color: silver;
+  color: navy;
+}

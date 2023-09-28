@@ -1,5 +1,5 @@
-import { createStore } from "redux";
-import { createSelector } from "Reselect";
+import { createStore } from "../cdn_modules/redux@4.2.1/redux.js";
+import { createSelector } from "../cdn_modules/reselect@4.1.8/reselect.js";
 import { Skill } from "./skill.mjs";
 
 function unescapeString(val) {

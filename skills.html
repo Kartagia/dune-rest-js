@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skills</title>
+  
+  <script type="module" src="./modules/sections.mjs"></script>
+  <script nomodule src="./modules/sections.js"></script>
+    
+  </script>
+</head>
+
+<body>
+  <main id="main">
+    <section name="registry">
+      <title>Registry</title>
+    </section>
+  </main>
+  <footer>
+    <form>
+      <div
+      <label>Section</label>
+      <input type="text" name="section">
+      </div>
+      <div>
+      <label>entry</label>
+      <input type="text" name="entryname">
+      </div>
+      <input name="bAdd" type="button" value="add">
+      <input name="bCheck" type="button" value="check">
+    </form>
+  </footer>
+    <script type="module">
+      alert("Module");
+      console.log("Loading counter");
+      import { validSection } from "./modules/id.mjs";
+      function checkValues(e) {
+        const target = document.getElementByName("section");
+        const name = document.getElementByName("entryname");
+        console.group("Check values")
+        console.log("Section:", section, ": ", validSection(section.value));
+        console.groupEnd();
+  
+      }
+      document.getElementByName("bAdd").addEventListener("click", (e) => {
+        alert("Add id to registry not implemented")
+      });
+      document.getElementByName("bCheck").addEventListener("click", checkValues);
+    </script>
+    <script nomodule>
+      console.log("No module loaded");
+      alert("No module mode");
+    </script>
+    <script>alert("Ei sit kumpiakaan");</script>
+</body>
+
+</html>

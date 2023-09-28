@@ -1,36 +1,40 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dune Rest Service</title>
-  <script type="module" src="./modules/person.js">console.log("Could not read script");</script>
-  <script type="module" src="./modules/data.js">
-    console.log("Could not load data module");    
+  <link rel="stylesheet" href="./index.css">
+  <script type="text/javascript" src="cdn_modules/redux@4.2.1/redux.js"></script>
+  <script type="text/javascript" src="cdn_modules/reselect@4.1.8/reselect.js"></script>
+  <script type="text/javascript" src="./modules/menu.js"></script>
+  <script type="module" src="./modules/person.js">
+    console.log("Could not read script");
   </script>
   <script>
-    function h1(text, level=1) {
+    function h1(text, level = 1) {
       const res = document.createElement(`h${level}`);
       res.textContent = text;
       return res;
     }
-  
-    function addSection(type, parent=document.getElementById("main")) {
+
+    function addSection(type, parent = document.getElementById("main")) {
       const node = document.createElement("section");
       node.setAttribute("id", getId(type));
       node.appendChild(h1(`Section ${type}`));
       parent.appendChild(node);
     }
-    
-    function getSection(type, parent=document.getElementById("main")) {
+
+    function getSection(type, parent = document.getElementById("main")) {
       return parent.ownerDocument.getElementById(getId(type));
     }
-    
+
     function getId(type, itemName) {
       const space = RegExp(/\s/g);
       const idString = RegExp(/^[\p{L}_][-\p{L}\d_]*$/u);
       if (type) {
-        const typeStr =("" + type).replaceAll(space,'_');
+        const typeStr = ("" + type).replaceAll(space, '_');
         if (!(idString.test(typeStr))) {
           throw new SyntaxError("Invalid identifier");
         }
@@ -38,7 +42,7 @@
           console.log(`Created id ${typeStr} for section ${type}`);
           return typeStr;
         } else {
-          const itenStr = (""+itemName).replaceAll(space, '_');
+          const itenStr = ("" + itemName).replaceAll(space, '_');
           if (idString.test(itenStr)) {
             const id = `${typeStr}.${itenStr}`;
             console.log(`Created id ${id} for ${itemName} of section ${type}`);
@@ -51,23 +55,23 @@
         throw new TypeError("Invalid section name");
       }
     }
-    
+
     function removeItem(type, itemId) {
       document.getElementById(getId(type, itemId)).remove();
       console.log(`Removed ${getId(type, itemId)}`);
     }
-    
+
     function addItem(type, itemId, content) {
       const added = document.createElement("article");
       added.setAttribute("id", getId(type, itemId));
-      added.innerHTML= content;
+      added.innerHTML = content;
       const remove = document.createElement("input");
       remove.setAttribute("type", "button");
       remove.setAttribute("value", "Remove");
       remove.addEventListener("click", (event) => {
         removeItem(type, itemId);
       });
-      
+
       added.appendChild(remove);
       let parent = getSection(type);
       if (parent == null) {
@@ -76,43 +80,88 @@
       }
       parent.appendChild(added);
       console.log(`Added ${getId(type, itemId)}`);
-    }''
-    
+    }
+
     function addEntry(data) {
       const type = document.querySelector('input[name="type"]:checked');
       alert(`Add ${type.value} Entry "${data.name.value}"`);
       addItem(type.value, data.name.value, data.name.value);
     }
   </script>
+  <script src="../cgi-bin/index.js"></script>
 </head>
 
 <body>
+  <nav>
+    <ul class="nav" id="nav-main">
+    </ul>
+  </nav>
   <header id="header"></header>
   <input type="file" name="dataSourceFile" id="dataSourceFile" />
   <main id="main">
     <section id="skills">
     </section>
     <form method="POST" onsubmit="alert('Add new');">
-      <div><label for="name">Name</label><input name="name" type="text"/></div>
+      <div><label for="name">Name</label><input name="name" type="text" /></div>
       <div>
         <caption>Type</caption>
-      <label>Character</label>
-      <input name="type" type="radio" value="people">
-      <label>Motivation</label>
-      <input name="type" type="radio" value="motivations" checked>
-      <label>Skill</label>
-      <input name="type" type="radio" value="skills">
-      
+        <label>Character</label>
+        <input name="type" type="radio" value="people">
+        <label>Motivation</label>
+        <input name="type" type="radio" value="motivations" checked>
+        <label>Skill</label>
+        <input name="type" type="radio" value="skills">
+
       </div>
       <input type="button" value="Add" onclick="addEntry(this.form)">
     </form>
   </main>
   <footer id="footer" />
-  <script type="module" src="./modules/skill.mjs">
+
+
+
+  <script>
+    const menu = createMenu(
+      "Nav",
+    [
+      createMenuItem(
+        {
+          name: "Home",
+          url: "/",
+          list: null
+        }),
+      createMenuItem({
+          name: "User",
+          content: "Account",
+          list: [
+            createMenuItem(
+              {
+                name: "Sign_In",
+                list: null,
+                url: "/login"
+              }),
+            createMenuItem(
+              {
+                name: "Sign_Up",
+                list: null,
+                url: "/signup"
+              }),
+            createMenuItem(
+              {
+                name: "Logout",
+                list: null,
+                url: "/logout"
+              })
+            ]
+        })
+    ]);
+
+    populateMenu(document, menu);
     
+    main();
   </script>
-   <script src="./readData.js">
-   </script>
+  <script src="./readData.js">
+  </script>
 </body>
 
 </html>
