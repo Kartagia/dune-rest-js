@@ -6,6 +6,12 @@
  * @property {Array<IMenuItem>} [list=[]] The submenu.
  * @property {string|Node|Node[]} [content] The content of the entry. The string is the HTML content.. Defaults to the name as text node
  */
+
+/**
+ * Create menu id.
+ * @param {string} name The name of the menu iten.
+ * @param {string} [prefix] The prefix of the menu item.
+ */
 function createId(name, prefix = null) {
   const result = (prefix == null ? `${name}` : `${prefix}${name}`);
   console.log("Created menu id: ", result);
@@ -29,7 +35,7 @@ function createMenuToggler(
     preserve: preserve,
     open: open || {},
     close: close || {},
-    show(t, log=logger) {
+    show(t, log = logger) {
       if (this.hidden) {
         this.hidden = false;
         if (this.preserve || this.close.display === undefined)
@@ -40,7 +46,7 @@ function createMenuToggler(
         log(`Already revealed`);
       }
     },
-    hide(t, log=logger) {
+    hide(t, log = logger) {
       if (!this.hidden) {
         this.hidden = true;
         if (this.preserve || this.open.display === undefined) {
@@ -52,7 +58,7 @@ function createMenuToggler(
         log("Already hidden");
       }
     },
-    toggle(t, log=logger) {
+    toggle(t, log = logger) {
       log("Toggling value:");
       if (this.hidden) {
         this.show(t, log);
@@ -64,10 +70,19 @@ function createMenuToggler(
 };
 
 /**
+ * The options of the menu item.
+ * @typedef {object} MenuItemOptions
+ * @property {string} [prefix] The identifier prefix.
+ */
+
+/**
  * Crwate a menu item.
- * @param {Part<IMenuItem>} param0
- * @param {object) [param0.prefix] The identifier prefix.
- 
+ * @param {string} name The name of the menu item.
+ * @param {string} [id] The identifier of the menu item.
+ * @param {URL|string} The url performing the list item action.
+ * @param {Array<IMenuItem>} [list=[]] The submenu of the list item.
+ * @param {*} [content] The content of the menu item.
+ * @param {MenuItemOptions} [options] The options of the menu itgm.
  */
 function createMenuItem({
   name,
@@ -89,11 +104,9 @@ function createMenuItem({
       content = [...content];
     } else if (typeof content === "object") {
       content = createMenuItem(content);
-    }
+    } 
   } else {
-    content = name.replaceAll(/_+/g, " ");
-    console.log(`Content: ${content}`)
-  }
+    content = name.replaceAll(/_+/g, " ").trim();
 
   return {
     name,
@@ -104,6 +117,10 @@ function createMenuItem({
   };
 }
 
+/**
+ * Activate state reporter.
+ * @param {string|URL} state The activated state.
+ */
 function activateState(state) {
   if (typeof state === "string") {
     console.log(`State transition: ${state}`);
@@ -149,11 +166,37 @@ function createMenu(menuName, menuItems = [], options = {}) {
   return result;
 }
 
+function createHALMenuItem(
+  resource,
+  options = {}
+) {
+  if (resource instanceof Object &&
+    "resource._links"
+    instanceof Array) {
+    const result = {
+      name: resource.name,
+      id: resource.id,
+      url: resource._links.find((lnk) => (lnk.rel === "self"))?.href,
+    };
+    result.list = resource._links.filter((lnk) => (lnk.rel !== "self")).map(
+      (lnk) => {
+        createMenuItem({
+          name: lnk.rel,
+          url: lnk.href
+        })
+      }
+    );
+
+  } else {
+    throw new TypeError("Invalid resource");
+  }
+}
+
 /**
  * @param {(Document|Element)} target
  * @param {Array<IMenuItem>} [items=[]] The menu items added to the menu.
  */
-function populateMenu(target, items = [], activateState = (e) => {alert(`Activated state: ${e}`);}, options = {}) {
+function populateMenu(target, items = [], activateState = (e) => { alert(`Activated state: ${e}`); }, options = {}) {
   const menuItem = (target instanceof Document ? target.getElementById("nav-main") : target);
   if (menuItem === undefined) {
     return;
@@ -231,8 +274,10 @@ function populateMenu(target, items = [], activateState = (e) => {alert(`Activat
             }
           )
         }
-        populateMenu(menu, item.list, activateState, { ...options,
-        prefix: createId(".", id) });
+        populateMenu(menu, item.list, activateState, {
+          ...options,
+          prefix: createId(".", id)
+        });
       }
     }
   );
