@@ -232,7 +232,7 @@ function reducer(state, action, module, actions = {}) {
   if (actions) {
     const moduleAction = (key) => (`${module}/${key}`);
     if (actions instanceof Map) {
-      return actionMapReducer(state, action, actions, moduleAction);
+      return actionMapReducer(state, action, actionsämoduleAction);
     } else if (typeof actions instanceof Array) {
       return actionArrayReducer(state, action, actions, moduleAction);
     } else if (actions instanceof Function) {
