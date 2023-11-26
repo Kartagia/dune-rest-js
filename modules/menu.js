@@ -104,17 +104,18 @@ function createMenuItem({
       content = [...content];
     } else if (typeof content === "object") {
       content = createMenuItem(content);
-    } 
+    }
   } else {
     content = name.replaceAll(/_+/g, " ").trim();
 
-  return {
-    name,
-    id,
-    url,
-    list,
-    content
-  };
+    return {
+      name,
+      id,
+      url,
+      list,
+      content
+    };
+  }
 }
 
 /**
@@ -137,18 +138,22 @@ function activateState(state) {
  * @param {Array<Part<IMenuItem>>}
  */
 function createMenu(menuName, menuItems = [], options = {}) {
-
   const result = menuItems.map(
     (entry, index) => {
-
+      if (entry == null) {
+        // Ruler
+        return entry;
+      }
       try {
+        let id = createId("" + index, "item");
+        console.log(`Entry #${index} ${entry} id: ${id}`);
         return createMenuItem({
-          id: createId("" + index, "item"),
+          id: id,
           ...entry
         });
       } catch (err) {
         throw new TypeError(
-          `Invalid item at ${index}`, { cause: err });
+          `Invalid item ${entry} at ${index}`, { cause: err });
       }
 
     });
@@ -166,13 +171,26 @@ function createMenu(menuName, menuItems = [], options = {}) {
   return result;
 }
 
+/**
+ * @typedef {object} HAL
+ * @property {Array<Link>} _links The links to the HOAS methods.
+ * @property {Array<Link>} [_embedded] The embedded resources.
+ * @property {...object} values
+ */
+
+/**
+ * Create a menu item from HAL.
+ * @param {HAL} The HAL resource.
+ */
 function createHALMenuItem(
   resource,
   options = {}
 ) {
+  const createContent = (options.createContent ? options.createContent : () => (undefined));
   if (resource instanceof Object &&
     "resource._links"
     instanceof Array) {
+
     const result = {
       name: resource.name,
       id: resource.id,
@@ -182,7 +200,8 @@ function createHALMenuItem(
       (lnk) => {
         createMenuItem({
           name: lnk.rel,
-          url: lnk.href
+          url: lnk.href,
+          content: createContent(name, rel, resource)
         })
       }
     );
@@ -206,81 +225,102 @@ function populateMenu(target, items = [], activateState = (e) => { alert(`Activa
   const itemTag = options.itemTag || "li";
   const menuClass = options.menuClass || "nav menu";
   const itemClass = options.itemClass || "nav item";
-  items.forEach(
+
+  // Creating menu item:
+  const entry = owner.createElement(itemTag);
+  target.appendChild(entry);
+
+  // Adding content
+  const content = owner.createElement("a");
+  target.appendChild(content);
+  if (item.content !== null) {
+    content.appendChild(
+      owner.createTextNode(item.content === undefined ?
+        item.name.replaceAll(/_+/g, " ") :
+        item.content)
+    );
+
+    // Add action to he content
+    if (item.url) {
+      content.addEventListener(
+        "click",
+        (e) => {
+          if (item.url) {
+            e.preventDefault();
+            activateState(item.url);
+          }
+        })
+    }
+  }
+
+  // Adding menu entries
+  items.slice(1).forEach(
     (item, index) => {
       if (item == null) {
         console.log(`Undefined element: ${options.prefix || ""} at ${index}`)
         return;
-      }
-      const entry = owner.createElement(itemTag);
-      const id = ((item.id === undefined) ?
-        createId("" + index, createId("item", options.prefix)) :
-        (item.id ? createId(item.id, options.prefix) : undefined));
-      if (id) {
-        entry.setAttribute("id", id);
-      }
-      const content = owner.createElement("a");
-      entry.appendChild(content);
-      if (item.content !== null) {
-        content.appendChild(
-          owner.createTextNode(item.content === undefined ?
-            item.name.replaceAll(/_+/g, " ") :
-            item.content)
-        );
-
-        // Add link
-        if (item.url) {
-          content.addEventListener(
-            "click",
-            (e) => {
-              if (item.url) {
-                e.preventDefault();
-                activateState(item.url);
-              }
-            })
-        }
-      }
-
-      // Submenu
-      menuItem.appendChild(entry);
-      if (item.list != null) {
+      } else {
         const menu = owner.createElement(menuTag);
-        const oldStyle = createMenuToggler({ preserve: true });
-        console.log("Toggler", oldStyle);
-
-        entry.appendChild(menu);
-        if (!item.url) {
-          content.addEventListener("click", (e) => {
-            console.group(`Toggle submenu of ${item.name}`);
-            oldStyle.toggle(menu, console.log);
-            console.groupEnd();
-          });
-        } else {
-          // Adding hover listener
-          entry.addEventListener(
-            "pointerenter",
-            (e) => {
-              console.group("Enter");
-              oldStyle.show(menu, console.log);
-              console.groupEnd();
-            }
-          );
-          entry.addEventListener(
-            "pointerleave",
-            (e) => {
-              console.group("Enter");
-              oldStyle.hide(menu);
-              console.groupEnd();
-            }
-          )
+        const id = ((item.id === undefined) ?
+          createId("" + index, createId("item", options.prefix)) :
+          (item.id ? createId(item.id, options.prefix) : undefined));
+        if (id) {
+          menu.setAttribute("id", id);
         }
-        populateMenu(menu, item.list, activateState, {
-          ...options,
-          prefix: createId(".", id)
-        });
+        if (item.list instanceof Array) {
+          populateMenu(menu, item.list, activateState, options);
+
+          // Submenu
+          entry.appendChild(menu);
+          if (options.popup) {
+            const oldStyle = createPopup(menu);
+            if (item.url) {
+              content.addEventListener(
+                "pointerenter", oldStyle.show
+              );
+              content.addEventListener(
+                "pointerleave", oldStyle.hide
+              );
+            } else {
+              content.addEventListener(
+                "click", oldStyle.toggle);
+            }
+
+          } else {
+            const oldStyle = createMenuToggler({ preserve: true });
+            console.log("Toggler", oldStyle);
+            entry.appendChild(menu);
+            if (!item.url) {
+              content.addEventListener("click", (e) => {
+                console.group(`Toggle submenu of ${item.name}`);
+                oldStyle.toggle(menu, console.log);
+                console.groupEnd();
+              });
+            } else {
+              // Adding hover listener
+              entry.addEventListener(
+                "pointerenter",
+                (e) => {
+                  console.group("Enter");
+                  oldStyle.show(menu, console.log);
+                  console.groupEnd();
+                }
+              );
+              entry.addEventListener(
+                "pointerleave",
+                (e) => {
+                  console.group("Enter");
+                  oldStyle.hide(menu);
+                  console.groupEnd();
+                }
+              )
+            }
+
+          }
+        }
       }
-    }
-  );
+    });
+
 }
 
 exports = { createMenuToggler, createMenu, createMenuItem, populateMenu };

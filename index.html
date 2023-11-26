@@ -92,9 +92,7 @@
 </head>
 
 <body>
-  <nav>
-    <ul class="nav" id="nav-main">
-    </ul>
+  <nav id="nav-main">
   </nav>
   <header id="header"></header>
   <input type="file" name="dataSourceFile" id="dataSourceFile" />
@@ -131,9 +129,26 @@
           list: null
         }),
       createMenuItem({
+        name: "All_Skills",
+        url: "/skills",
+        list: [
+          null,
+          {
+            name: "Add_Skill",
+            url: "/skills/add",
+            list: null
+          },
+          {
+            name: "Remove_Skill",
+            
+          }
+        ]
+      }),
+      createMenuItem({
           name: "User",
           content: "Account",
           list: [
+            null,
             createMenuItem(
               {
                 name: "Sign_In",
