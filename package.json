@@ -1,5 +1,10 @@
 {
+  "script": {
+    "firebase.init": "firebase init",
+    "firebase.dev": "firebase emulators:start"
+  },
   "dependencies": {
-    "firebase": "^10.7.0"
+    "firebase": "^10.7.0",
+    "firebase-tools": "^12.9.1"
   }
 }
