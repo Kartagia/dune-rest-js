@@ -1,3 +1,5 @@
 node_modules/*
 private/*
 !private/*.example*
+*.log
+.vscode

@@ -1,5 +1,5 @@
 {
-  "script": {
+  "scripts": {
     "firebase.init": "firebase init",
     "firebase.dev": "firebase emulators:start"
   },
