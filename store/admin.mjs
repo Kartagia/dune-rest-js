@@ -1,13 +1,15 @@
 import admin from "firebase-admin";
 
-var serviceAccount = require("../private/serviceAccountKey.json");
+import serviceAccount from "../private/serviceAccountKey.json";
+
+import appInfo from "../private/appInfo.json";
 
 /**
  * Perform admin login to the Firebase.
  * @param {string} [databaseUrl] The database url of the data storage.
  * Defaults to the default database url.
  */
-export function adminLogin(databaseUrl = "https://dune-rpg-assistant-default-rtdb.europe-west1.firebasedatabase.app") {
+export function adminLogin(databaseUrl = appInfo.databaseUrl) {
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: databaseUrl
