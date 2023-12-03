@@ -8,9 +8,10 @@ import { useState, createContext } from "react";
 /**
  * Error definition.
  * @template TYPE - The type of the target. 
+ * @template {ERROR extends Error} [ERROR=Error] The type of the error. 
  * @typedef {Object} ErrorDefinition
  * @property {TYPE} target The target of the error.
- * @property {Error} cause The error causing the trouble. 
+ * @property {ERROR} cause The error causing the trouble. 
  * @property {string} message The error message.
  * @method toString
  * @returns {string} The string representation of the error.
@@ -18,12 +19,13 @@ import { useState, createContext } from "react";
 
 /**
  * Create a new error definition.
- * @template TYPE Teh type of the target.
+ * @template TYPE The type of the target.
+ * @template {ERROR extends Error} [ERROR=Error] The type of the error. 
  * @param {TYPE} target The tareget of the error.
- * @param {Error} cause The actual error. 
+ * @param {ERROR} cause The actual error. 
  * @param {string} [message] The message of the created error.
  * Defaults to the message of the cause. 
- * @returns {ErrorDefinition<TYPE>}
+ * @returns {ErrorDefinition<TYPE, ERROR>}
  */
 const createErrorDefinition = (target, cause, message=null) => {
   return {
@@ -38,7 +40,8 @@ const createErrorDefinition = (target, cause, message=null) => {
 
 /**
  * The error getter of errors attached to an identifier.
- * @template KEY, [TYPE=any]
+ * @template KEY The type of the resource identifier.
+ * @template [TYPE=any] The type of the target.
  * @callback ErrorGetter
  * @param {KEY} id The identifier of the resource.
  * @returns {Array<ErrorDefinition<TYPE>>} The list of errors.
@@ -46,7 +49,8 @@ const createErrorDefinition = (target, cause, message=null) => {
 
 /**
  * The error setter of errors attached to an identifier.
- * @template KEY, [TYPE=any]
+ * @template KEY The type of the resource identifier.
+ * @template [TYPE=any] The type of the target.
  * @callback ErrorsSetter
  * @param {KEY} id The identifier of the resource.
  * @param {Array<ErrorDefinition<TYPE>>} errors The list
@@ -57,7 +61,8 @@ const createErrorDefinition = (target, cause, message=null) => {
 
 /**
  * The error adder for errors attached to an identifier.
- * @template KEY, [TYPE=any]
+ * @template KEY The type of the resource identifier.
+ * @template [TYPE=any] The type of the target.
  * @callback ErrorAdder
  * @param {KEY} id The identifier of the resource.
  * @param {ErrorDefinition<TYPE>} error The added
@@ -77,11 +82,15 @@ const createErrorDefinition = (target, cause, message=null) => {
 
 /**
  * Test whether a resource has an error.
- * @template KEY, [TYPE=any] 
+ * @template KEY The type of the resource identifier.
+ * @template [TYPE=any] The type of the target.
+ * @template {ERROR extends Error} [ERROR=Error] The error type.
  * @callback ErrorsTester
  * @param {KEY} id The identifier of the resource.
- * @returns {boolean} True, if and only if the
- * given resource has an error.
+ * @param {Predicate<ERROR>} [filter] The filter filtering errors.
+ * Defaults to a filter accepting all errors.
+ * @returns {boolean} True, if and only if the given resource has any
+ * error passing the filter.
  */
 
 /**

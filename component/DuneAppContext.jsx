@@ -14,6 +14,30 @@ import ComplexErrorContext from "./ErrorContext";
  */
 
 /**
+ * Getter of an collection.
+ * @template TYPE
+ * @callback CollectionGetter
+ * @returns {Promize<TYPE[]>} The promise of an array of values.
+ * if the array is not available, the promise is rejected with
+ * reason.
+ */
+
+/**
+ * Setter of an collection.
+ * 
+ * The default rejection types:
+ * - {@link TypeError}: The type of values was invalid.
+ * - {@link RangeError}: Any value was invalid.
+ * - {@link ErrorDefinition}: The definition of the error. 
+ *
+ * @template TYPE
+ * @callback CollectionSetter
+ * @param {TYPE[]} values The new values of the collection.
+ * @returns {Promise<never>} The promise of the operation.
+ * The promise will reject with error.
+ */
+
+/**
  * @typedef {Object} CharacterModel A placeholder model for a character.
  * @property {number} [id] THe identifier of the model.
  * @property {string} name THe name of the character.

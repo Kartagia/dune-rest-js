@@ -6,13 +6,27 @@ import { useState, createContext } from "react";
  */
 
 /**
+ * @callback LogInPredicate
+ * @returns {boolean} True, if and only if the session is logged in.
+ * 
+ * @callback SessionRefresher
+ * @param {number|null} [idleTime=600000] The expiration time in milliseconds
+ * from this moment. The value must be less than 1 hour. Defaulst to 10 minutes
+ * of inaction.
+ * @return {Promise<number>} The updated refresh time. The promise may
+ * fail due {@link RangeError} indicating the delta was not valid. 
+ */
+
+/**
  * @typedef {Object} SessionContextModel
  * @property {UserInfo} [userInfo] The user information of the
  * logged user.
  * @property {number} [expireTime] The expiration time of the
  * session.
- * @method isLoggedIn()
- * @returns {boolean} True, if and only if the session is logged in.
+ * @property {LogInPredicate} isLoggedIn The callback determining
+ * whether the session has been logged in.
+ * @property {SessionRefresher} refreshSession The callback refreshing
+ * the current session.
  */
 
 /**
@@ -38,16 +52,28 @@ const SessionContext = createContext({
    * @returns {boolean} True, if and only if
    * the session is logged in.
    */
-  isLoggedIn() {
-    return false;
+  isLoggedIn: () => {
+    return !(this.userInfo == null || this.expireTime == null || Date.now() >= this.expireTime);
   },
 
   /**
-   * Refreshes the session updating the expiret time.
-   * @returns {number} The updated expire time.
+   * Refresher callback of the session.
+   * @type {SessionRefresher}
    */
-  refreshSession() {
-    return this.expireTime;
+  refreshSession: (idleTime = 600000) => {
+    return new Promise((respond, reject) => {
+      if (idleTime === null) {
+        this.expireTime = idleTime;
+        respond(this.expireTime);
+      } else if (!Number.isInteger(idleTime)) {
+        reject(new TypeError("Invalid idle time"));
+      } else if (idleTime > (10 * 60 * 60 * 1000)) {
+        reject(new RangeError("Invalid idle time"));
+      } else {
+        this.expireTime = Date.now() + idleTime;
+        respond(this.expireTime);
+      }
+    });
   }
 })
 
@@ -76,28 +102,33 @@ export function SessionContextProvider(props) {
    */
   const isLoggedInHandler = () => {
     const now = Date.now();
-    return Promise.resolve(userData != null && expireTime != null && 
+    return Promise.resolve(userData != null && expireTime != null &&
       now < expireTime);
   }
 
   /**
    * Update the exmpiration time.
-   * @param {number|null} [delta=600000] The amount of seconds until expiration.
+   * @param {number|null} [idleTime=600000] The amount of seconds until expiration.
    * Dfeaults to 10 minutes. 
    * @throws {RangeError} The expiration time is invalid. The system does not
    * allow greater expiration time than 1 hour. 
    */
-  const expireTimeHandler = (delta=600000) => {
-    if (delta == null) {
-      // Performing immediate expiration.
-      setExpireTime(null);
-    } else if (Number.isInteger(delta) && delta < 3600000) {
-      // Setting the expiration time.
-      setExpireTime(Date.now() + delta);
-    } else {
-      // Invalid value.
-      throw new RangeError("Invalid session expiration time");
-    }
+  const expireTimeHandler = (idleTime = 600000) => {
+    return new Promise((respond, reject) => {
+      if (idleTime == null) {
+        // Performing immediate expiration.
+        setExpireTime(null);
+        respond(null);
+      } else if (Number.isInteger(idleTime) && idleTime < 3600000) {
+        // Setting the expiration time.
+        const expireTime = Date.now() + idleTime;
+        setExpireTime(Date.now() + idleTime);
+        respond(expireTime);
+      } else {
+        // Invalid value.
+        reject(new RangeError("Invalid session expiration time"));
+      }
+    })
   }
 
   /**
