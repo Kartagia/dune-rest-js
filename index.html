@@ -89,6 +89,7 @@
     }
   </script>
   <script src="../cgi-bin/index.js"></script>
+  <script type="module" src="./login.mjs"></script>
 </head>
 
 <body>
@@ -97,8 +98,8 @@
     </ul>
   </nav>
   <header id="header"></header>
-  <input type="file" name="dataSourceFile" id="dataSourceFile" />
   <main id="main">
+    <section id="content"></section>
     <section id="skills">
     </section>
     <form method="POST" onsubmit="alert('Add new');">
@@ -157,8 +158,8 @@
     ]);
 
     populateMenu(document, menu);
-    
     main();
+    
   </script>
   <script src="./readData.js">
   </script>
