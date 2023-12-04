@@ -1,6 +1,10 @@
 
-import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithPopup } from 'firebase/auth';
-import { useState } from 'react';
+import { GoogleAuthProvider, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithPopup } from 'firebase/auth';
+import { useContext, useId, useRef, useState } from 'react';
+import SessionContext, { LOGIN_CONTEXT_PROPERTY, USERINFO_PROPERTY,
+CREDENTIALS_PROPERTY } from './SessionContext';
+import ComplexErrorContext, { ComplexErrorContextProvider } from './ErrorContext';
+import logger from console.log;
 
 /**
  * @module firebaselogin
@@ -9,45 +13,23 @@ import { useState } from 'react';
  */
 
 /**
- * A login component performing the login using Firebase.
- * @param {import("react").ReactPropTypes} props 
- * @returns {import("react").ReactElement} The created
- * react element.
+ * The registration error context property.
+ * @type {string}
  */
-function FirebaseLogin(props) {
+export const REGISTER_CONTEXT_PROPERTY = "register";
+
+
+/**
+ * A login component with username and password.
+ * @param {import("react").ReactPropTypes} props 
+ */
+export function Login(props) {
+  const session = useContext(SessionContext);
+  const errors = useContext(ComplexErrorContext);
   /**
    * @type {[boolean, Function]}
    */
-  const [loggedIn, setLoggedIn] = useState(props.loggedIn);
-  const [userInfo, setUserInfo] = useState(props.userInfo);
-  /**
-   * @type {[Array<Error>, Function]}
-   */
-  const [errors, setErrors] = useState(props.errors || []);
-  /**
-   * @type {[boolean, Function]}
-   */
-  const [isOpen, setOpen] = useState(props.open || (!loggedIn && errors.length == 0));
-  useEffect(() => {
-    if (errors.length > 0) {
-      // The login is in erroneus state - the login and userinfo 
-      // is not updated.
-    } else if (loggedIn) {
-      // A successful login.
-      setUserInfo(userInfo);
-    } else {
-      // A successful logout.
-      // Logging out.
-      setUserInfo(null);
-    }
-  }, [loggedIn, errors])
-  /**
-   * The current login state.
-   * @returns {boolean} True, if and only if the login is successful
-   */
-  const isLoggedIn = () => {
-    return userInfo != null;
-  }
+  const [isOpen, setOpen] = useState(props.open || (!session.isLoggedIn() && errors.length == 0));
   const auth = getAuth();
 
   /**
@@ -71,15 +53,22 @@ function FirebaseLogin(props) {
         ).then(
           (userCredential) => {
             // Signed in
-            setUserInfo(userCredential.user);
-            setErrors([]);
-            setLoggedIn(true);
+            const userInfo = {
+              displayName: userCredential.user.displayName || (<i>Anonymous User</i>),
+              fireabaseTokenId: userCredential.user.getIdToken()
+            };
+            session.setUserInfo(userInfo);
+            errors.clearErrors(REGISTER_CONTEXT_PROPERTY);
           }
         ).catch(
           (error) => {
-            const code = error.errorCode;
+            // TODO: Add handling of a message with the email already
+            // reserved.
             const message = error.message;
-            setErrors([code, `${message}`]);
+            errors.addError(errors.createErrorDefinition(
+              [REGISTER_CONTEXT_PROPERTY, CREDENTIALS_PROPERTY], 
+            error, `Invalid user credentials: ${message}`
+            ));
           }
         )
       case "LogIn":
@@ -94,16 +83,29 @@ function FirebaseLogin(props) {
                * @type {import('@firebase/auth').UserInfo}
                */
               const user = userCredential.user;
-              setUserInfo(user);
-              setLoggedIn(true);
+              session.setUserInfo(user).then( () => {
+                return session.refreshSession();
+              }).catch(errorDef => {
+                errors.addError(
+                  [LOGIN_CONTEXT_PROPERTY, USERINFO_PROPERTY, 
+                  ...(errorDef.target||[])], errorDef.error, 
+                  errorDef.message);
+              });
             })
           .catch((error) => {
             const errorCode = error.code;
             const errorMessage = error.message;
+            errors.addError(errors.createErrorDefinition(
+              [LOGIN_CONTEXT_PROPERTY, CREDENTIALS_PROPERTY], 
+            error, `Invalid user credentials: ${message}`
+            ));
 
           });
       default:
-
+          // The unknown submission.
+          logger.error("Attempt to submit form with invalid submission attribute")
+          errors.addError([LOGIN_CONTEXT_PROPERTY], 
+            Error("Invalid form submission"), "Something went wrong...")
     }
   };
 
@@ -125,23 +127,62 @@ function FirebaseLogin(props) {
     // The component is empty, if it is closed.
     return (<></>);
   }
+}
 
-  // Adding the authentication change handler.
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // The user is signed in.
-      if (props.onLogin) {
-        props.onLogin(user);
+/**
+ * A login component performing the login using Firebase.
+ * @param {import("react").ReactPropTypes} props 
+ * @returns {import("react").ReactElement} The created
+ * react element.
+ */
+function FirebaseLogin(props) {
+  /**
+   * Teh reference of the login eleement placeholder.
+   * @type {(import('react').MutableRefObject<import('react').ReactElement|
+   * import('react').ReactHTMLElement)}
+   */
+  const ref = useRef();
+  useEffect(() => {
+    // Adding the authentication change handler.
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // The user is signed in.
+        if (props.onLogin) {
+          props.onLogin(user);
+        }
+        setLoggedIn(true);
+      } else {
+        // Produce login
+        if (props.onLogout) {
+          props.onLoggout(user);
+        }
+        setLoggedIn(false);
       }
-      setLoggedIn(true);
-    } else {
-      // Produce login
-      if (props.onLogout) {
-        props.onLoggout(user);
-      }
-      setLoggedIn(false);
+    });
+  }, []);
+
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+  const signIn = async (auth, provider) => {
+  signInWithPopup(auth, provider).then(
+    (credentials) => {
+      ref.current.classList.add("hidden");
+      return credentials;
+    },
+    (error) => {
+      logger.error(`[Code: ${error.code}][${error.user}]: Login failed: ${error.code}: ${error.message}: `);
+      ref.current.textConent = "<p>Login failed: " + error.message + ". Click to retry.</p>";
+      ref.current.addEventListener("click", () => {
+        signIn(auth, provider);
+      })
+      this(auth, provider);
     }
-  });
+  )
+  };
+  signIn(auth, provider);
+  return () => {
+    <div ref={ref}>LoggingIn</div>
+  }
 }
 
 export default FirebaseLogin;
